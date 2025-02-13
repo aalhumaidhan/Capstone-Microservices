@@ -1,8 +1,5 @@
 package Capstone.Transactions.controller;
 
-import Capstone.Transactions.Enums.Methods;
-import Capstone.Transactions.Enums.Status;
-import Capstone.Transactions.bo.GetTransactionsByReceiverResponse;
 import Capstone.Transactions.bo.*;
 import Capstone.Transactions.entity.TransactionEntity;
 import Capstone.Transactions.service.TransactionService;
@@ -10,11 +7,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @RequestMapping("/transactions")
 @RestController
@@ -26,10 +20,12 @@ public class TransactionController {
         this.transactionService = transactionService;
     }
 
-//    @GetMapping("/business/{businessId}")
-//    public List<TransactionDTO> getTransactionsForBusiness(@PathVariable Long businessId) {
-//        return transactionService.getTransactionsByBusinessId(businessId);
-//    }
+    @GetMapping("/business/{businessId}")
+    public ResponseEntity<List<TransactionDTO>> getTransactionsByBusinessId(@PathVariable Long businessId) {
+        List<TransactionDTO> transactions = transactionService.getTransactionsByBusinessId(businessId);
+        return ResponseEntity.ok(transactions);
+    }
+
 
     @GetMapping("/{transactionId}")
     public ResponseEntity<GetTransactionByIdResponse> getTransactionById(@PathVariable("transactionId") Long transactionId){
@@ -79,38 +75,6 @@ public class TransactionController {
         return ResponseEntity.ok(response);
     }
 
-//    @GetMapping("/sender/{senderId}")
-//    public ResponseEntity<GetTransactionsBySenderResponse> getTransactionsBySender(@PathVariable("senderId") Long senderId){
-//        GetTransactionsBySenderResponse response = new GetTransactionsBySenderResponse();
-//        try{
-//            List<TransactionDTO> transactions = new ArrayList<>();
-//            for (TransactionEntity transaction : transactionService.getTransactionsBySender(senderId)){
-//                transactions.add(transactionService.fillTransactionDto(transaction));
-//            }
-//            response.setTransactions(transactions);
-//        } catch (Exception e) {
-//            response.setMessage(e.getMessage());
-//            return ResponseEntity.status(404).body(response);
-//        }
-//        return ResponseEntity.ok(response);
-//    }
-
-//    @GetMapping("/receiver/{receiverId}")
-//    public ResponseEntity<GetTransactionsByReceiverResponse> getTransactionsByReceiver(@PathVariable("receiverId") Long receiverId){
-//        GetTransactionsByReceiverResponse response = new GetTransactionsByReceiverResponse();
-//        try{
-//            List<TransactionDTO> transactions = new ArrayList<>();
-//            for (TransactionEntity transaction : transactionService.getTransactionsByReceiver(receiverId)){
-//                transactions.add(transactionService.fillTransactionDto(transaction));
-//            }
-//            response.setTransactions(transactions);
-//        } catch (Exception e) {
-//            response.setMessage(e.getMessage());
-//            return ResponseEntity.status(404).body(response);
-//        }
-//        return ResponseEntity.ok(response);
-//    }
-
 
 //    @GetMapping("/associate/{associateId}")
 //    public ResponseEntity<GetTransactionsByAssociateResponse> getTransactionsByAssociate(@PathVariable("associateId") Long associateId){
@@ -132,22 +96,22 @@ public class TransactionController {
     @PostMapping("/business/transfer/faceid")
     public ResponseEntity<Object> createBusinessTransactionWithFaceID(@RequestBody MakeFaceIdTransactionRequest request) {
         try {
-            TransactionEntity transaction = transactionService.createBusinessTransactionWithFaceID(request);
+            TransactionEntity transaction = transactionService.makeBusinessTransactionWithFaceID(request);
             return ResponseEntity.ok(transaction);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Transaction failed: " + e.getMessage());
         }
     }
 
-    @PutMapping("/{transactionId}/finalize")
-    public ResponseEntity<Object> finalizeTransaction(@PathVariable Long transactionId) {
-        try {
-            TransactionEntity transaction = transactionService.finalizeTransaction(transactionId);
-            return ResponseEntity.ok(transaction);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Transaction finalization failed: " + e.getMessage());
-        }
-    }
+//    @PutMapping("/{transactionId}/finalize")
+//    public ResponseEntity<Object> finalizeTransaction(@PathVariable Long transactionId) {
+//        try {
+//            TransactionEntity transaction = transactionService.finalizeTransaction(transactionId);
+//            return ResponseEntity.ok(transaction);
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Transaction finalization failed: " + e.getMessage());
+//        }
+//    }
 
     @PostMapping("/qr-code")
     public ResponseEntity<Object> startQrCodeTransaction(@RequestBody StartQrCodeTransactionRequest request) {

@@ -6,6 +6,7 @@ import Capstone.Transactions.bo.*;
 import Capstone.Transactions.entity.*;
 import Capstone.Transactions.repository.TransactionRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -43,6 +44,37 @@ public class TransactionService {
         }
         return transactionDTO;
     }
+
+
+//    @Cacheable(value = "userTransactions", key = "#userId")
+//    public List<TransactionDTO> getTransactionsByUserId(Long userId) {
+//        List<TransactionEntity> transactions = transactionRepository.findBySenderIdOrReceiverId(userId, userId);
+//
+//        return transactions.stream()
+//                .map(this::convertToDTO)
+//                .toList();
+//    }
+
+    public List<TransactionDTO> getTransactionsByBusinessId(Long businessId) {
+        List<TransactionEntity> transactions = transactionRepository.findBySenderIdOrReceiverId(businessId, businessId);
+
+        return transactions.stream()
+                .map(this::convertToDTO)
+                .toList();
+    }
+
+    private TransactionDTO convertToDTO(TransactionEntity transaction) {
+        TransactionDTO dto = new TransactionDTO();
+        dto.setTransactionId(transaction.getId());
+        dto.setSenderId(transaction.getSenderId());
+        dto.setReceiverId(transaction.getReceiverId());
+        dto.setAmount(transaction.getAmount());
+        dto.setMethod(transaction.getMethod());
+        dto.setTransactionDate(transaction.getDateTime());
+        dto.setStatus(transaction.getStatus());
+        return dto;
+    }
+
 
     public TransactionEntity getTransactionById(Long transactionId) {
         return transactionRepository.findById(transactionId).orElseThrow();
@@ -82,41 +114,13 @@ public class TransactionService {
         return transactionRepository.save(deposit);
     }
 
-/* WORK ON THIS
-    public List<TransactionDTO> getTransactionsByBusinessId(Long businessId) {
-        // Fetch transactions where businessId is either sender or receiver
-        List<TransactionEntity> transactions = transactionRepository.findBySenderIdOrReceiverId(businessId, businessId);
-
-        // Convert TransactionEntity to TransactionDTO
-        return transactions.stream()
-                .map(this::convertToDTO)
-                .toList();
-    }
-
- */
-
-//    public TransactionEntity createBusinessTransactionWithFaceID(MakeFaceIdTransactionRequest request) {
-//        LocalDateTime datetime = LocalDateTime.now();
-//        TransactionEntity transaction = new TransactionEntity();
-//
-//        transaction.setAmount(request.getAmount());
-//        transaction.setAssociateId(request.getAssociateId());
-//        transaction.setSenderId(request.getFaceId());
-//        transaction.setReceiverId(request.getReceiverId());
-//        transaction.setMethod(Methods.FACEID);
-//        transaction.setStatus(Status.PENDING);
-//        transaction.setDateTime(datetime.toString());
-//
-//        return transactionRepository.save(transaction);
-//    }
-
-    public TransactionEntity createBusinessTransactionWithFaceID(MakeFaceIdTransactionRequest request) {
-        LocalDateTime datetime = LocalDateTime.now();
+    public TransactionEntity makeBusinessTransactionWithFaceID(MakeFaceIdTransactionRequest request) {
+        LocalDateTime dateTime = LocalDateTime.now();
         TransactionEntity transaction = new TransactionEntity();
 
         String userUrl = "http://localhost:8081/personal/faceid/" + request.getFaceId();
-        ResponseEntity<Long> response = restTemplate.getForEntity(userUrl, Long.class);
-        Long senderId = response.getBody(); // Get user ID from response
+        ResponseEntity<Long> faceIdResponse = restTemplate.getForEntity(userUrl, Long.class);
+        Long senderId = faceIdResponse.getBody();
 
         if (senderId == null) {
             throw new IllegalArgumentException("User with given Face ID not found.");
@@ -126,71 +130,36 @@ public class TransactionService {
         transaction.setAssociateId(request.getAssociateId());
         transaction.setSenderId(senderId);
         transaction.setReceiverId(request.getReceiverId());
+
         transaction.setMethod(Methods.FACEID);
         transaction.setStatus(Status.PENDING);
-        transaction.setDateTime(datetime.toString());
+        transaction.setDateTime(dateTime.toString());
 
-        return transactionRepository.save(transaction);
-    }
+        transactionRepository.save(transaction);
 
+        String balanceUrl = "http://localhost:8081/personal/wallet/" + senderId;
+        ResponseEntity<Map> balanceResponse = restTemplate.getForEntity(balanceUrl, Map.class);
 
-//    public TransactionEntity finalizeTransaction(Long transactionId) {
-//        TransactionEntity transaction = transactionRepository.findById(transactionId)
-//                .orElseThrow(() -> new IllegalArgumentException("Transaction not found"));
-//
-//        String userUrl = "http://localhost:8081/personal/wallet/" + transaction.getSenderId();
-//        ResponseEntity<Double> response = restTemplate.getForEntity(userUrl, Double.class);
-//        double senderBalance = response.getBody();
-//
-//        if (senderBalance >= transaction.getAmount()) {
-//            transaction.setStatus(Status.APPROVED);
-//
-//            String deductUrl = "http://localhost:8081/personal/wallet/deduct/" + transaction.getSenderId();
-//            HttpHeaders headers = new HttpHeaders();
-//            headers.setContentType(MediaType.APPLICATION_JSON);
-//
-//            HttpEntity<Double> requestEntity = new HttpEntity<>(transaction.getAmount(), headers);
-//            restTemplate.exchange(deductUrl, HttpMethod.PUT, requestEntity, Void.class);
-//
-//        } else {
-//            transaction.setStatus(Status.REJECTED);
-//        }
-//
-//        return transactionRepository.save(transaction);
-//    }
-
-    public TransactionEntity finalizeTransaction(Long transactionId) {
-        TransactionEntity transaction = transactionRepository.findById(transactionId)
-                .orElseThrow(() -> new IllegalArgumentException("Transaction not found"));
-
-        if (!transaction.getStatus().equals(Status.PENDING)) {
-            throw new IllegalArgumentException("Transaction is not pending.");
-        }
-
-        String balanceUrl = "http://localhost:8081/personal/wallet/" + transaction.getSenderId();
-        ResponseEntity<Map> response = restTemplate.getForEntity(balanceUrl, Map.class);
-
-        if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+        if (!balanceResponse.getStatusCode().is2xxSuccessful() || balanceResponse.getBody() == null) {
             throw new IllegalArgumentException("Failed to fetch wallet balance.");
         }
 
-        Double walletBalance = Double.valueOf(response.getBody().get("walletBalance").toString());
+        Double walletBalance = Double.valueOf(balanceResponse.getBody().get("walletBalance").toString());
 
-        if (walletBalance < transaction.getAmount()) {
+        if (walletBalance < request.getAmount()) {
             transaction.setStatus(Status.REJECTED);
-            transactionRepository.save(transaction);
-            throw new IllegalArgumentException("Insufficient funds. Transaction rejected.");
+            return transactionRepository.save(transaction);
         }
 
-        String deductUrl = "http://localhost:8081/personal/wallet/deduct/" + transaction.getSenderId();
+        String deductUrl = "http://localhost:8081/personal/wallet/deduct/" + senderId;
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         Map<String, Double> deductRequest = new HashMap<>();
-        deductRequest.put("amount", transaction.getAmount());
+        deductRequest.put("amount", request.getAmount());
 
-        HttpEntity<Map<String, Double>> requestEntity = new HttpEntity<>(deductRequest, headers);
-        restTemplate.exchange(deductUrl, HttpMethod.PUT, requestEntity, String.class);
+        HttpEntity<Map<String, Double>> deductEntity = new HttpEntity<>(deductRequest, headers);
+        restTemplate.exchange(deductUrl, HttpMethod.PUT, deductEntity, String.class);
 
         transaction.setStatus(Status.APPROVED);
         return transactionRepository.save(transaction);
@@ -242,13 +211,18 @@ public class TransactionService {
         return transaction;
     }
 
+    public void deleteTransaction(Long transactionId) {
+        transactionRepository.deleteById(transactionId);
+    }
+
+
     @Transactional
     public TransactionEntity makeBusinessTransactionWithQRCode(MakeQRCodeTransactionRequest request) throws Exception {
         LocalDateTime datetime = LocalDateTime.now();
         TransactionEntity transaction = new TransactionEntity();
 
         String tempTransactionUrl = "http://localhost:8081/personal/tempTransactions/" + request.getSenderId();
-        ResponseEntity<List<TransactionDTO>> response = restTemplate.exchange(
+        ResponseEntity<List<TempTransactionDTO>> response = restTemplate.exchange(
                 tempTransactionUrl,
                 HttpMethod.GET,
                 null,
@@ -256,14 +230,13 @@ public class TransactionService {
                 }
         );
 
-        List<TransactionDTO> tempTransactions = response.getBody();
+        List<TempTransactionDTO> tempTransactions = response.getBody();
         if (tempTransactions == null || tempTransactions.isEmpty()) {
             throw new Exception("No temporary transactions found.");
         }
 
-        // ✅ Step 2: Match Temp Transaction
-        TransactionDTO matchedTransaction = null;
-        for (TransactionDTO tempTransaction : tempTransactions) {
+        TempTransactionDTO matchedTransaction = null;
+        for (TempTransactionDTO tempTransaction : tempTransactions) {
             if (tempTransaction.getAmount().equals(request.getAmount())) {
                 matchedTransaction = tempTransaction;
                 break;
@@ -279,7 +252,8 @@ public class TransactionService {
                 balanceUrl,
                 HttpMethod.GET,
                 null,
-                new ParameterizedTypeReference<Map<String, Double>>() {}
+                new ParameterizedTypeReference<>() {
+                }
         );
         Double walletBalance = balanceResponse.getBody().get("walletBalance");
 
@@ -305,9 +279,17 @@ public class TransactionService {
         transaction.setStatus(Status.APPROVED);
         transaction.setDateTime(datetime.toString());
 
-        return transactionRepository.save(transaction);
-    }
+        transactionRepository.save(transaction);
 
+        String deleteTempTransactionUrl = "http://localhost:8081/personal/tempTransactions/delete/" + request.getSenderId();
+        HttpEntity<TempTransactionDTO> deleteRequest = new HttpEntity<>(matchedTransaction, headers);
+
+        restTemplate.exchange(deleteTempTransactionUrl, HttpMethod.POST, deleteRequest, String.class);
+
+        transactionRepository.findById(matchedTransaction.getId()).ifPresent(transactionRepository::delete);
+
+        return transaction;
+    }
 
 }
 

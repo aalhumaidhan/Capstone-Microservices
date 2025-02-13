@@ -9,7 +9,6 @@ import Capstone.Users.repository.PersonalRepository;
 import Capstone.Users.service.PersonalService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -53,7 +52,6 @@ public class PersonalController {
         }
         response.setUser(personalRepository.findById(userId).get());
         response.setMessage("User retrieved successfully");
-        System.out.println(response);
         return ResponseEntity.ok(response);
     }
 
@@ -192,6 +190,24 @@ public class PersonalController {
 
         return ResponseEntity.ok(tempTransactions);
     }
+
+    @PostMapping("/tempTransactions/delete/{userId}")
+    public ResponseEntity<String> deleteTempTransaction(
+            @PathVariable Long userId,
+            @RequestBody TempTransactionDTO tempTransactionDTO) {
+        PersonalEntity user = personalRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        boolean removed = user.removeTempTransaction(tempTransactionDTO);
+        if (!removed) {
+            throw new IllegalArgumentException("Temporary transaction not found.");
+        }
+
+        personalRepository.save(user);
+        return ResponseEntity.ok("Temporary transaction removed successfully.");
+    }
+
+
 
 }
 

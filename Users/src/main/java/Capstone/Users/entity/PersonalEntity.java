@@ -161,8 +161,14 @@ public class PersonalEntity extends UserEntity{
         tempTransactions.add(transaction);
     }
 
-    public void removeTempTransaction(TempTransactionDTO transaction) {
-        this.tempTransactions.remove(transaction);
+
+    public boolean removeTempTransaction(TempTransactionDTO tempTransactionDTO) {
+        return tempTransactions.removeIf(tempTransaction ->
+                tempTransaction.getId().equals(tempTransactionDTO.getId()) &&
+                        tempTransaction.getAmount().equals(tempTransactionDTO.getAmount()) &&
+                        tempTransaction.getDateTime().equals(tempTransactionDTO.getDateTime()) &&
+                        tempTransaction.getStatus().equals(tempTransactionDTO.getStatus())
+        );
     }
 
     @Override

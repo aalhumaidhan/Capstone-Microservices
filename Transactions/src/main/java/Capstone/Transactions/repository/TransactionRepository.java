@@ -13,12 +13,11 @@ import java.util.List;
 @Repository
 public interface TransactionRepository extends JpaRepository<TransactionEntity, Long> {
 
-    TransactionEntity findByDateTime(String dateTime);
     List<TransactionEntity> findByStatus(Status status);
     List<TransactionEntity> findByMethod(Methods method);
     List<TransactionEntity> findBySenderId(Long senderId);
     List<TransactionEntity> findByReceiverId(Long receiverId);
     List<TransactionEntity> findByAssociateId(Long associateId);
-//    List<TransactionEntity> findBySenderOrReceiverId(Long senderId, Long receiverId);
+    List<TransactionEntity> findBySenderIdOrReceiverId(Long senderId, Long receiverId);
 
 }
