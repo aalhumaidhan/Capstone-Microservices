@@ -21,7 +21,7 @@ public class PersonalService {
     private final RestTemplate restTemplate;
     private final PersonalRepository personalRepository;
     private final DependentRepository dependentRepository;
-    private static final String TRANSACTION_API = "http://localhost:8082/transaction/";
+    private static final String TRANSACTION_API = "http://localhost:8082/transactions/";
 
 
     public PersonalService(PersonalRepository personalRepository, DependentRepository dependentRepository, RestTemplate restTemplate) {

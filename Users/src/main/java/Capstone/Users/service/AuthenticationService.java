@@ -69,6 +69,7 @@ public class AuthenticationService {
             user.setAddress(associateRequest.getAddress());
             user.setBankAccountNumber(business.getBankAccountNumber());
             user.setBusinessLicenseId(business.getBusinessLicenseId());
+            user.setBusiness(business);
             user = userRepository.save(user);
             business.addAssociate(user);
             userRepository.save(business);
