@@ -55,13 +55,24 @@ public class TransactionService {
 //                .toList();
 //    }
 
+//    public List<TransactionDTO> getTransactionsByBusinessId(Long businessId) {
+//        List<TransactionEntity> transactions = transactionRepository.findBySenderIdOrReceiverId(businessId, businessId);
+//
+//        return transactions.stream()
+//                .map(this::convertToDTO)
+//                .toList();
+//    }
+
     public List<TransactionDTO> getTransactionsByBusinessId(Long businessId) {
+        // Fetch transactions where the business ID is either sender or receiver
         List<TransactionEntity> transactions = transactionRepository.findBySenderIdOrReceiverId(businessId, businessId);
 
+        // Convert TransactionEntity to TransactionDTO
         return transactions.stream()
-                .map(this::convertToDTO)
+                .map(this::fillTransactionDto)
                 .toList();
     }
+
 
     private TransactionDTO convertToDTO(TransactionEntity transaction) {
         TransactionDTO dto = new TransactionDTO();
