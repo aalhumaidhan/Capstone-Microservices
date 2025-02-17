@@ -32,8 +32,8 @@ public class BusinessService {
     private final DependentRepository dependentRepository;
     private final AssociateRepository associateRepository;
 
-    private static final String BUSINESS_API = "http://localhost:8082/business/profile/";
-    private static final String TRANSACTION_API = "http://localhost:8082/transaction/";
+//    private static final String BUSINESS_API = "http://localhost:8082/transactions/business/profile/";
+    private static final String TRANSACTION_API = "http://localhost:8082/transactions/";
 
 
     public BusinessService(BusinessRepository businessRepository, AuthenticationService authenticationService, PersonalRepository personalRepository, RestTemplate restTemplate, DependentRepository dependentRepository, AssociateRepository associateRepository) {
@@ -105,7 +105,7 @@ public class BusinessService {
 
 
     public List<TransactionDTO> getTransactions(Long businessId, String token) {
-        String url = BUSINESS_API + businessId + "/transactions";
+        String url = TRANSACTION_API + "business/" + businessId + "/transactions";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -114,7 +114,8 @@ public class BusinessService {
         HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
 
         ResponseEntity<List<TransactionDTO>> response = restTemplate.exchange(
-                url, HttpMethod.GET, requestEntity, new ParameterizedTypeReference<List<TransactionDTO>>() {}
+                url, HttpMethod.GET, requestEntity, new ParameterizedTypeReference<>() {
+                }
         );
 
         return response.getBody();
