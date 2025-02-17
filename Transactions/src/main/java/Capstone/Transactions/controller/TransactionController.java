@@ -7,8 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @RequestMapping("/transactions")
 @RestController
@@ -54,20 +53,21 @@ public class TransactionController {
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<GetTransactionsBySenderResponse> getTransactionsByUserId(@PathVariable("userId") Long userId){
+    public ResponseEntity<GetTransactionsBySenderResponse> getTransactionsByUserId(@PathVariable("userId") Long userId) {
         GetTransactionsBySenderResponse response = new GetTransactionsBySenderResponse();
         try {
-            List<TransactionDTO> transactions = new ArrayList<>();
-            for (TransactionEntity transaction : transactionService.getTransactionsBySender(userId)){
-                transactions.add(transactionService.fillTransactionDto(transaction));
+            Map<Long, TransactionDTO> transactions = new HashMap<>();
+
+            for (TransactionEntity transaction : transactionService.getTransactionsBySender(userId)) {
+                transactions.put(transaction.getId(), transactionService.fillTransactionDto(transaction));
             }
 
-            for (TransactionEntity transaction : transactionService.getTransactionsByReceiver(userId)){
-                transactions.add(transactionService.fillTransactionDto(transaction));
+            for (TransactionEntity transaction : transactionService.getTransactionsByReceiver(userId)) {
+                transactions.put(transaction.getId(), transactionService.fillTransactionDto(transaction));
             }
 
-            response.setTransactions(transactions);
-            response.setMessage("Successfully retrieved all transactions made by UserId " + userId );
+            response.setTransactions(new ArrayList<>(transactions.values()));
+            response.setMessage("Successfully retrieved all transactions made by UserId " + userId);
         } catch (Exception e) {
             response.setMessage(e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);

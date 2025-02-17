@@ -135,6 +135,7 @@ public class BusinessService {
 
     public BusinessDTO getBusiness(Long associateId) {
         AssociateEntity associate = associateRepository.findById(associateId).orElseThrow();
+        System.out.println(associate.getBusiness());
         return fillBusinessDTO(associate.getBusiness());
     }
 

@@ -1,0 +1,39 @@
+{
+  "businesses": [
+    {
+      "username": "codedcanteen",
+      "email": "canteen@joincoded.com",
+      "password": "password",
+      "name": "Coded Canteen",
+      "address": "123 Business St, Business City",
+      "businessLicenseId": "BL123456",
+      "bankAccountNumber": "BA1234567890",
+      "associates": [
+        {
+          "fullName": "Free Zone Branch",
+          "phoneNumber": "1234567890",
+          "username": "freezone",
+          "email": "freezone@example.com",
+          "password": "password",
+          "address": "789 Associate St, Associate City"
+        }
+      ]
+    }
+  ],
+  "personals": [
+    {
+      "fullName": "Salem Al-Mutairi",
+      "address": "456 Personal Ave, Personal City",
+      "phoneNumber": "0987654321",
+      "civilId": "123456789012",
+      "walletBalance": 1000.0,
+      "faceID": "face123",
+      "bankAccountNumber": "PA0987654321",
+      "privacy": true,
+      "transactionLimit": 5000.0,
+      "username": "salem",
+      "email": "salem@example.com",
+      "password": "password"
+    }
+  ]
+}
