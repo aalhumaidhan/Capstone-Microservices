@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RequestMapping("/personal")
@@ -155,12 +156,22 @@ public class PersonalController {
     @GetMapping("/faceid/{faceId}")
     public ResponseEntity<Long> getUserIdByFaceId(@PathVariable String faceId) {
         try {
-            PersonalEntity user = personalRepository.findByFaceID(faceId)
-                    .orElseThrow(() -> new IllegalArgumentException("User with Face ID not found"));
+            // Check in PersonalRepository
+            Optional<PersonalEntity> personalUser = personalRepository.findByFaceID(faceId);
+            if (personalUser.isPresent()) {
+                return ResponseEntity.ok(personalUser.get().getId());
+            }
 
-            return ResponseEntity.ok(user.getId());
-        } catch (Exception e) {
+            // Check in DependentRepository
+            Optional<DependentEntity> dependentUser = dependentRepository.findByFaceId(faceId);
+            if (dependentUser.isPresent()) {
+                return ResponseEntity.ok(dependentUser.get().getId());
+            }
+
+            // If not found in both repositories
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 
