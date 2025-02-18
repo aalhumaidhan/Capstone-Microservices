@@ -129,7 +129,7 @@ public class TransactionService {
         LocalDateTime dateTime = LocalDateTime.now();
         TransactionEntity transaction = new TransactionEntity();
 
-        String userUrl = "http://localhost:8081/personal/faceid/" + request.getFaceId();
+        String userUrl = "http://users:8081/personal/faceid/" + request.getFaceId();
         ResponseEntity<Long> faceIdResponse = restTemplate.getForEntity(userUrl, Long.class);
         Long senderId = faceIdResponse.getBody();
 
@@ -148,7 +148,7 @@ public class TransactionService {
 
         transactionRepository.save(transaction);
 
-        String balanceUrl = "http://localhost:8081/personal/wallet/" + senderId;
+        String balanceUrl = "http://users:8081/personal/wallet/" + senderId;
         ResponseEntity<Map> balanceResponse = restTemplate.getForEntity(balanceUrl, Map.class);
 
         if (!balanceResponse.getStatusCode().is2xxSuccessful() || balanceResponse.getBody() == null) {
@@ -162,7 +162,7 @@ public class TransactionService {
             return transactionRepository.save(transaction);
         }
 
-        String deductUrl = "http://localhost:8081/personal/wallet/deduct/" + senderId;
+        String deductUrl = "http://users:8081/personal/wallet/deduct/" + senderId;
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
@@ -180,7 +180,7 @@ public class TransactionService {
         LocalDateTime datetime = LocalDateTime.now();
         TransactionEntity transaction = new TransactionEntity();
 
-        String userUrl = "http://localhost:8081/personal/wallet/" + request.getSenderId();
+        String userUrl = "http://users:8081/personal/wallet/" + request.getSenderId();
         ResponseEntity<Map> walletResponse = restTemplate.getForEntity(userUrl, Map.class);
 
         if (!walletResponse.getStatusCode().is2xxSuccessful() || walletResponse.getBody() == null) {
@@ -201,7 +201,7 @@ public class TransactionService {
 
         transactionRepository.save(transaction);
 
-        String tempTransactionUrl = "http://localhost:8081/personal/createTempTransaction/" + request.getSenderId();
+        String tempTransactionUrl = "http://users:8081/personal/createTempTransaction/" + request.getSenderId();
 
         Map<String, Object> tempTransactionRequest = new HashMap<>();
         tempTransactionRequest.put("id", transaction.getId());
@@ -232,7 +232,7 @@ public class TransactionService {
         LocalDateTime datetime = LocalDateTime.now();
         TransactionEntity transaction = new TransactionEntity();
 
-        String tempTransactionUrl = "http://localhost:8081/personal/tempTransactions/" + request.getSenderId();
+        String tempTransactionUrl = "http://users:8081/personal/tempTransactions/" + request.getSenderId();
         ResponseEntity<List<TempTransactionDTO>> response = restTemplate.exchange(
                 tempTransactionUrl,
                 HttpMethod.GET,
@@ -258,7 +258,7 @@ public class TransactionService {
             throw new Exception("Transaction not found in temp transactions.");
         }
 
-        String balanceUrl = "http://localhost:8081/personal/wallet/" + request.getSenderId();
+        String balanceUrl = "http://users:8081/personal/wallet/" + request.getSenderId();
         ResponseEntity<Map<String, Double>> balanceResponse = restTemplate.exchange(
                 balanceUrl,
                 HttpMethod.GET,
@@ -272,7 +272,7 @@ public class TransactionService {
             throw new IllegalArgumentException("Insufficient funds.");
         }
 
-        String deductBalanceUrl = "http://localhost:8081/personal/wallet/deduct/" + request.getSenderId();
+        String deductBalanceUrl = "http://users:8081/personal/wallet/deduct/" + request.getSenderId();
         Map<String, Double> deductRequest = new HashMap<>();
         deductRequest.put("amount", request.getAmount());
 
@@ -292,7 +292,7 @@ public class TransactionService {
 
         transactionRepository.save(transaction);
 
-        String deleteTempTransactionUrl = "http://localhost:8081/personal/tempTransactions/delete/" + request.getSenderId();
+        String deleteTempTransactionUrl = "http://users:8081/personal/tempTransactions/delete/" + request.getSenderId();
         HttpEntity<TempTransactionDTO> deleteRequest = new HttpEntity<>(matchedTransaction, headers);
 
         restTemplate.exchange(deleteTempTransactionUrl, HttpMethod.POST, deleteRequest, String.class);

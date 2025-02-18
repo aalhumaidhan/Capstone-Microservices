@@ -110,7 +110,7 @@ public class DataService {
             }
 
             // Call the seedTransactions API
-            String transactionServiceUrl = "http://localhost:8082/data/seed";
+            String transactionServiceUrl = "http://transactions:8082/data/seed";
             restTemplate.postForEntity(transactionServiceUrl, null, String.class);
 
         } catch (IOException e) {

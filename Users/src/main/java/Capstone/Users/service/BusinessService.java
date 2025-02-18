@@ -32,8 +32,7 @@ public class BusinessService {
     private final DependentRepository dependentRepository;
     private final AssociateRepository associateRepository;
 
-//    private static final String BUSINESS_API = "http://localhost:8082/transactions/business/profile/";
-    private static final String TRANSACTION_API = "http://localhost:8082/transactions/";
+    private static final String TRANSACTION_API = "http://transactions:8082/transactions/";
 
 
     public BusinessService(BusinessRepository businessRepository, AuthenticationService authenticationService, PersonalRepository personalRepository, RestTemplate restTemplate, DependentRepository dependentRepository, AssociateRepository associateRepository) {
@@ -53,7 +52,7 @@ public class BusinessService {
             throw new Exception("Face ID not found in either repository");
         }
 
-        String url = "http://localhost:8082/transactions/business/transfer/faceid";
+        String url = "http://transactions:8082/transactions/business/transfer/faceid";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
