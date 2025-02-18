@@ -2,6 +2,7 @@ services:
   postgres:
     image: postgres
     container_name: postgres-container
+    platform: linux/amd64
     ports:
       - "5433:5432"
     environment:
@@ -12,6 +13,7 @@ services:
   pgadmin:
     image: dpage/pgadmin4
     container_name: pgadmin-container
+    platform: linux/amd64
     ports:
       - "5050:80"
     environment:
@@ -20,6 +22,7 @@ services:
   users:
     build: ./Users # path to your backend Dockerfile
     container_name: users-container
+    platform: linux/amd64
     ports:
       - "8081:8081"
     depends_on:
@@ -27,6 +30,7 @@ services:
   transactions:
     build: ./Transactions # path to your frontend Dockerfile
     container_name: transactions-container
+    platform: linux/amd64
     ports:
       - "8082:8082"
     depends_on:
