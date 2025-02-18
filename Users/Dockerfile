@@ -1,11 +1,12 @@
-FROM openjdk:25-jdk
+FROM maven:3.9-eclipse-temurin-17 AS build
+WORKDIR /app
+COPY . .
+RUN mvn clean install -DskipTests
 
-LABEL version="1.0"
+FROM eclipse-temurin:17-jre-jammy
+WORKDIR /app
+COPY --from=build /app/target/*.jar Users.jar
+
 
 EXPOSE 8081:8081
-
-WORKDIR /app
-
-COPY target/Users-0.0.1-SNAPSHOT.jar /app/Users-0.0.1-SNAPSHOT.jar
-
-ENTRYPOINT ["java","-jar","Users-0.0.1-SNAPSHOT.jar"]
+ENTRYPOINT ["java","-jar","Users.jar"]
